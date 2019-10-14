@@ -180,6 +180,18 @@ class Translator
     }
     
    /**
+    * Retrieves the XML that the translator sends to DeepL
+    * to be translated.
+    * 
+    * @return string
+    * @see Translator::renderXML()
+    */
+    public function getXML() : string
+    {
+        return $this->renderXML();
+    }
+    
+   /**
     * Starts the translation process. Afterwards, the translated strings
     * can be accessed via the string instances themselves.
     * 
@@ -210,7 +222,7 @@ class Translator
         );
         
         $config->setTagHandling(array('xml'));
-        $config->setNonSplittingTags(array(self::SPLITTING_TAG));
+        $config->setPreserveFormatting(\Scn\DeeplApiConnector\Enum\TextHandlingEnum::PRESERVEFORMATTING_ON);
         $config->setSourceLang($this->sourceLang);
         $config->setTargetLang($this->targetLang);
         $config->setSplitSentences(\Scn\DeeplApiConnector\Enum\TextHandlingEnum::SPLITSENTENCES_NONEWLINES);
@@ -323,7 +335,7 @@ class Translator
     * @param string $xml
     * @throws Translator_Exception
     */
-    protected function parseXMLResult($xml) : void
+    protected function parseXMLResult(string $xml) : void
     {
         $dom = new \DOMDocument();
         $dom->loadXML($xml);
@@ -343,8 +355,9 @@ class Translator
                 throw new Translator_Exception(
                     'ID attribute value missing in DeepL response XML',
                     sprintf(
-                        'A translation element does not have the expected ID attribute. XML source: %s',
-                        PHP_EOL.htmlspecialchars($xml)
+                        'A translation element does not have the expected ID attribute. Received XML: %s We originally sent this XML: %s',
+                        $this->prettifyXML($xml),
+                        $this->prettifyXML($this->getXML())
                     ),
                     self::ERROR_MISSING_ID_ATTRIBUTE_IN_RESPONSE
                 );
@@ -355,9 +368,10 @@ class Translator
                 throw new Translator_Exception(
                     'Returned string does not exist',
                     sprintf(
-                        'The string [%s] was present in the translated XML that does not exist. XML source: %s',
+                        'The string [%s] was present in the translated XML that does not exist. Received XML: %s We originally sent this XML: %s',
                         $stringID,
-                        PHP_EOL.htmlspecialchars($xml)
+                        $this->prettifyXML($xml),
+                        $this->prettifyXML($this->getXML())
                     ),
                     self::ERROR_RESPONSE_STRING_DOES_NOT_EXIST
                 );
@@ -380,13 +394,19 @@ class Translator
                 throw new Translator_Exception(
                     'String not found in result',
                     sprintf(
-                        'The string [%s] could not be found in the result XML. XML source: %s',
+                        'The string [%s] could not be found in the result XML. Received this XML: %s We originally sent this XML: %s',
                         $stringID,
-                        PHP_EOL.htmlspecialchars($xml)
+                        $this->prettifyXML($xml),
+                        $this->prettifyXML($this->getXML())
                     ),
                     self::ERROR_STRING_NOT_FOUND_IN_RESULT
                 );
             }
         }
+    }
+    
+    protected function prettifyXML(string $xml)
+    {
+        return \AppUtils\ConvertHelper::highlight_xml($xml, true); 
     }
 }
