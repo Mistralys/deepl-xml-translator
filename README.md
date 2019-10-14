@@ -1,8 +1,20 @@
 # DeepL XML Translator
 
-This is a drop-in helper class that can translate a bundle of strings,
+This is a drop-in PHP helper class that can translate a bundle of strings,
 which may contain markup. It uses DeepL's XML translation feature, and
 is designed to be very easy to use.
+
+## Installation
+
+Simply require the package via Composer:
+
+```json
+"require": {
+    "mistralys/deepl-xml-translator" : "dev-master"
+}
+```
+
+See the packagist page: https://packagist.org/packages/mistralys/deepl-xml-translator
 
 ## Usage
 
