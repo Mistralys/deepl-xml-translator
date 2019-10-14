@@ -135,6 +135,19 @@ class Translator
             self::$deepl = \Scn\DeeplApiConnector\DeeplClient::create($this->apiKey);
         }
     }
+    
+   /**
+    * Retrieves the DeepL API connection, to be able to run more
+    * advanced translation tasks.
+    * 
+    * @return \Scn\DeeplApiConnector\DeeplClient
+    */
+    public function getConnector() : \Scn\DeeplApiConnector\DeeplClient
+    {
+        $this->initDeepL();
+        
+        return self::$deepl;
+    }
 
    /**
     * Adds a string to translate, and returns the string instance.
