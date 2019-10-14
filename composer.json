@@ -1,0 +1,36 @@
+{
+	"name" : "mistralys/deepl-xml-translator",
+	"description" : "PHP and Javascript localization library.",
+	"type" : "library",
+    "license" : "GPL-3.0-or-later",
+	"authors" : 
+	[
+		{
+			"email" : "s.mordziol@mistralys.eu",
+			"name" : "Sebastian Mordziol",
+			"role" : "Lead"
+		}
+	],
+	"autoload" : 
+	{
+		"psr-4" : 
+		{
+			"DeeplXML\\" : "src/"
+		},
+		"classmap" : 
+		[
+			"src/"
+		]
+	},
+	"minimum-stability" : "dev",
+	"prefer-stable" : true,
+	"require" : 
+	{
+		"mistralys/application-utils" : "dev-master",
+		"scn/deepl-api-connector": "dev-master"
+	},
+	"require-dev" : 
+	{
+		"phpunit/phpunit" : "8.2.5"
+	}
+}
