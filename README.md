@@ -58,3 +58,15 @@ $strings = $translator->getStrings();
      $text = $string->getTranslatedText();
  }
 ```
+
+## DeepL API connection
+
+The translator class uses the [SC-Networks/deepl-api-connector](https://github.com/SC-Networks/deepl-api-connector) DeepL API package to connect to the service in the background.
+
+If you need more advanced features, like translating files and the like, you may use the fully configured connector instance directly:
+
+```php
+$api = $translator->getConnector();
+
+// do something with it
+```
