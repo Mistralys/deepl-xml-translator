@@ -70,3 +70,7 @@ $api = $translator->getConnector();
 
 // do something with it
 ```
+
+## Running the tests
+
+By default, the unit tests will only test the offline API of the Translator itself. To enable live testing with the DeepL API, rename the file `tests/apikey.dist.php` to `tests/apikey.php` and edit it to insert your API key. The additional tests will be enabled automatically.

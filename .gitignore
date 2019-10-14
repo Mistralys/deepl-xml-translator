@@ -1,1 +1,3 @@
 vendor
+tests/apikey.php
+.phpunit.result.cache
