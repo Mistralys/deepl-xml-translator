@@ -33,6 +33,8 @@ class Translator
     
     const ERROR_STRING_NOT_FOUND_IN_RESULT = 37506;
     
+    const ERROR_CANNOT_GET_UNKNOWN_STRING = 37507;
+    
    /**
     * The name of the XML tag to use to store individual texts in
     * @var string
@@ -46,9 +48,10 @@ class Translator
     const IGNORE_TAG = 'deeplignore'; 
     
     /**
-     * @var \Scn\DeeplApiConnector\DeeplClient
+     * @var \Scn\DeeplApiConnector\DeeplClient[]
+     * @see Translator::initDeepL()
      */
-    protected static $deepl;
+    protected static $deepl = array();
     
    /**
     * @var Translator_String[]
@@ -90,8 +93,8 @@ class Translator
     public function __construct(string $apiKey, string $sourceLang, string $targetLang)
     { 
         $this->apiKey = $apiKey;
-        $this->sourceLang = $sourceLang;
-        $this->targetLang = $targetLang;
+        $this->sourceLang = strtoupper($sourceLang);
+        $this->targetLang = strtoupper($targetLang);
     }
     
     public function getSourceLanguage() : string
@@ -123,16 +126,15 @@ class Translator
     
    /**
     * Initializes the DeepL connection - this is only done
-    * once, and shared between all translator instances. It
-    * uses the API key as defined in the APP_DEEPL_API_KEY
-    * config setting.
+    * once, and shared between all translator instances, per
+    * API key to allow different API keys.
     * 
     * @throws Translator_Exception
     */
     protected function initDeepL()
     {
-        if(!isset(self::$deepl)) {
-            self::$deepl = \Scn\DeeplApiConnector\DeeplClient::create($this->apiKey);
+        if(!isset(self::$deepl[$this->apiKey])) {
+            self::$deepl[$this->apiKey] = \Scn\DeeplApiConnector\DeeplClient::create($this->apiKey);
         }
     }
     
@@ -146,7 +148,7 @@ class Translator
     {
         $this->initDeepL();
         
-        return self::$deepl;
+        return self::$deepl[$this->apiKey];
     }
 
    /**
@@ -244,7 +246,7 @@ class Translator
         {
             /* @var $translation \Scn\DeeplApiConnector\Model\Translation */
             
-            $translation = self::$deepl->getTranslation($config);
+            $translation = self::$deepl[$this->apiKey]->getTranslation($config);
             
             $xml = $translation->getText();
             
@@ -274,6 +276,39 @@ class Translator
     public function getStrings()
     {
         return array_values($this->strings);
+    }
+   
+   /**
+    * Checks whether a string with the specified ID has been added.
+    * @param string $id
+    * @return bool
+    */
+    public function stringIDExists(string $id) : bool
+    {
+        return isset($this->strings[$id]);
+    }
+    
+   /**
+    * Retrieves a string instance that was added previously by its ID.
+    * 
+    * @param string $id
+    * @throws Translator_Exception
+    * @return Translator_String
+    */
+    public function getStringByID(string $id) : Translator_String
+    {
+        if(isset($this->strings[$id])) {
+            return $this->strings[$id];
+        }
+        
+        throw new Translator_Exception(
+            'Cannot get unknown string',
+            sprintf(
+                'No string with the ID [%s] has been added.',
+                $id
+            ),
+            self::ERROR_CANNOT_GET_UNKNOWN_STRING
+        );
     }
     
    /**
