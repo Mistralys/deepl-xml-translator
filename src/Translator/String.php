@@ -123,7 +123,7 @@ class Translator_String
         {
             $text = str_replace(
                 array('<'.$tagName.'>', '</'.$tagName.'>'), 
-                ' ', // To avoid DeepL stripping spaces
+                '',
                 $text
             );
         }

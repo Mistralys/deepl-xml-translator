@@ -373,6 +373,7 @@ class Translator
     protected function parseXMLResult(string $xml) : void
     {
         $dom = new \DOMDocument();
+        $dom->preserveWhiteSpace = false;
         $dom->loadXML($xml);
         
         $nodes = $dom->getElementsByTagName(self::SPLITTING_TAG);
