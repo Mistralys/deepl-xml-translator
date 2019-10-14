@@ -1,12 +1,13 @@
 # DeepL XML Translator
 
 This is a drop-in PHP helper class that can translate a bundle of strings,
-which may contain markup. It uses DeepL's XML translation feature, and
-is designed to be very easy to use.
+which may contain markup. It uses [DeepL](https://www.deepl.com)'s 
+[XML translation feature](https://www.deepl.com/docs-api.html?part=xml), 
+and is designed to be very easy to use.
 
 ## Installation
 
-Simply require the package via Composer:
+Simply require the package in your project via Composer:
 
 ```json
 "require": {
@@ -50,6 +51,8 @@ catch(\DeeplXML\Translator_Exception $e)
 
 ### Access the translated strings
 
+Retrieving all strings at once:
+
 ```php
 $strings = $translator->getStrings();
 
@@ -57,6 +60,27 @@ $strings = $translator->getStrings();
  {
      $text = $string->getTranslatedText();
  }
+```
+
+Retrieving specific strings by ID:
+
+```php
+$string = $translator->getStringByID('string2');
+$text = $string->getTranslatedText();
+```
+
+### Ignoring parts of strings
+
+To avoid parts of strings being translated, the characters to ignore can be
+specified as needed. They are replaced by placeholders by a simple search & replace
+before sending the translation to DeepL, and restored again afterwards. 
+
+```php
+$string = $translator->addString('string1', 'Please ignore me');
+
+// the text "ignore" will not be translated in the string
+$string->addIgnoreString('ignore');
+
 ```
 
 ## DeepL API connection
