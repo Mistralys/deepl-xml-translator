@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/Mistralys/deepl-xml-translator.svg?branch=master)](https://travis-ci.com/Mistralys/deepl-xml-translator)
+
 # DeepL XML Translator
 
 This is a drop-in PHP helper class that can translate a bundle of strings,
