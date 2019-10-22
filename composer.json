@@ -26,7 +26,7 @@
 	"prefer-stable" : true,
 	"require" : 
 	{
-		"mistralys/application-utils" : "dev-master",
+		"mistralys/application-utils" : ">=1.0",
 		"scn/deepl-api-connector": "dev-master"
 	},
 	"require-dev" : 
