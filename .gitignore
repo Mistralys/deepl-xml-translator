@@ -1,3 +1,4 @@
 vendor
 tests/apikey.php
 .phpunit.result.cache
+composer.lock
