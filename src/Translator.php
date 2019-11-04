@@ -84,6 +84,11 @@ class Translator
     protected $simulate = false;
     
    /**
+    * @var string
+    */
+    protected $proxy;
+    
+   /**
     * Create a new translation helper for the specified languages.
     * 
     * @param string $apiKey The API key to use to connect to the DeepL API
@@ -125,6 +130,22 @@ class Translator
     }
     
    /**
+    * Sets a proxy to use to connect to the DeepL API endpoint.
+    * All requests will be done through the proxy.
+    * 
+    * @param string $proxyURI The URI, in the form: tcp://username:password@1.2.3.4:10
+    * @return Translator
+    */
+    public function setProxy(string $proxyURI) : Translator
+    {
+        $this->proxy = $proxyURI;
+        
+        $this->reset();
+        
+        return $this;
+    }
+    
+   /**
     * Initializes the DeepL connection - this is only done
     * once, and shared between all translator instances, per
     * API key to allow different API keys.
@@ -133,9 +154,42 @@ class Translator
     */
     protected function initDeepL()
     {
-        if(!isset(self::$deepl[$this->apiKey])) {
-            self::$deepl[$this->apiKey] = \Scn\DeeplApiConnector\DeeplClient::create($this->apiKey);
+        if(isset(self::$deepl[$this->apiKey])) {
+            return;
         }
+         
+        self::$deepl[$this->apiKey] = new \Scn\DeeplApiConnector\DeeplClient(
+            new \GuzzleHttp\Client($this->compileRequestOptions()),
+            new \Scn\DeeplApiConnector\Handler\DeeplRequestFactory($this->apiKey)
+        );
+    }
+    
+   /** 
+    * Resets the deepl instance if it has already been created.
+    */
+    protected function reset()
+    {
+        if(isset(self::$deepl[$this->apiKey])) {
+            self::$deepl[$this->apiKey] = null;
+        }
+    }
+    
+   /**
+    * Compiles the request options to the expected Guzzle
+    * request format.
+    * 
+    * @return array
+    */
+    protected function compileRequestOptions() : array
+    {
+        $options = array();
+        
+        if(isset($this->proxy)) 
+        {
+            $options['proxy'] = $this->proxy;
+        }
+        
+        return $options;
     }
     
    /**
