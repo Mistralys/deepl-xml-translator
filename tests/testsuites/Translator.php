@@ -103,5 +103,26 @@ final class TranslatorTest extends TestCase
         
         $this->assertEquals('<p>Hallo <b>world</b></p>', $string->getTranslatedText());
     }
-}
     
+    public function test_connectWithProxy()
+    {
+        if(empty(TESTS_PROXY_SERVER)) {
+            $this->markTestSkipped('No proxy server specified.');
+            return;
+        }
+        
+        if(empty(TESTS_DEEPL_APIKEY)) {
+            $this->markTestSkipped('No DeepL API key specified.');
+            return;
+        }
+        
+        $translator = new Translator(TESTS_DEEPL_APIKEY, 'EN', 'DE');
+        $translator->setProxy(TESTS_PROXY_SERVER);
+        
+        $translator->addString('id1', 'Hello');
+        
+        $translator->translate();
+        
+        $this->assertTrue($translator->isTranslated());
+    }
+}
