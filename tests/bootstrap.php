@@ -22,4 +22,5 @@
     else 
     {
         define('TESTS_DEEPL_APIKEY', '');
+        define('TESTS_PROXY_SERVER', '');
     }
