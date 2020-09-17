@@ -497,6 +497,6 @@ class Translator
     
     protected function prettifyXML(string $xml)
     {
-        return \AppUtils\ConvertHelper::highlight_xml($xml, true); 
+        return \AppUtils\Highlighter::xml($xml, true); 
     }
 }
