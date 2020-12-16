@@ -1,5 +1,6 @@
 <?php
 
+use DeeplXML\Translator_Exception_Request;
 use PHPUnit\Framework\TestCase;
 
 use DeeplXML\Translator;
@@ -74,8 +75,8 @@ final class TranslatorTest extends TestCase
         
         $translator->addString('id1', 'Hello');
 
-        $translator->translate();
-        
+        $this->runTranslation($translator);
+
         $this->assertTrue($translator->isTranslated());
         
         $string = $translator->getStringByID('id1');
@@ -96,8 +97,8 @@ final class TranslatorTest extends TestCase
         
         $translator->addString('id1', '<p>Hello <b>world</b></p>')
         ->addIgnoreString('world');
-        
-        $translator->translate();
+
+        $this->runTranslation($translator);
         
         $string = $translator->getStringByID('id1');
         
@@ -120,9 +121,24 @@ final class TranslatorTest extends TestCase
         $translator->setProxy(TESTS_PROXY_SERVER);
         
         $translator->addString('id1', 'Hello');
-        
-        $translator->translate();
+
+        $this->runTranslation($translator);
         
         $this->assertTrue($translator->isTranslated());
+    }
+
+    private function runTranslation(Translator $translator) : void
+    {
+        try
+        {
+            $translator->translate();
+        }
+        catch(Translator_Exception_Request $ex)
+        {
+            $this->fail(
+                'An exception occurred during the request to DeepL. Details:'.PHP_EOL.
+                $ex->renderAnalysis()
+            );
+        }
     }
 }
