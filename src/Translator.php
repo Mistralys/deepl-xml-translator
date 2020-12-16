@@ -10,6 +10,9 @@ declare(strict_types=1);
 
 namespace DeeplXML;
 
+use AppUtils\ConvertHelper;
+use AppUtils\Highlighter;
+use AppUtils\XMLHelper;
 use GuzzleHttp\Client;
 use Scn\DeeplApiConnector\DeeplClient;
 use Scn\DeeplApiConnector\Enum\TextHandlingEnum;
@@ -51,7 +54,7 @@ class Translator
     const IGNORE_TAG = 'deeplignore'; 
     
     /**
-     * @var DeeplClient[]
+     * @var array<string,DeeplClient|null>
      * @see Translator::initDeepL()
      */
     protected static $deepl = array();
@@ -153,7 +156,7 @@ class Translator
     * once, and shared between all translator instances, per
     * API key to allow different API keys.
     */
-    protected function initDeepL()
+    private function initDeepL() : void
     {
         if(isset(self::$deepl[$this->apiKey])) {
             return;
@@ -168,7 +171,7 @@ class Translator
    /** 
     * Resets the deepl instance if it has already been created.
     */
-    protected function reset()
+    private function reset() : void
     {
         if(isset(self::$deepl[$this->apiKey])) {
             self::$deepl[$this->apiKey] = null;
@@ -179,9 +182,9 @@ class Translator
     * Compiles the request options to the expected Guzzle
     * request format.
     * 
-    * @return array
+    * @return array<string,mixed>
     */
-    protected function compileRequestOptions() : array
+    private function compileRequestOptions() : array
     {
         $options = array();
         
@@ -352,7 +355,7 @@ class Translator
     
    /**
     * Retrieves all strings that were added to translate.
-    * @return array
+    * @return Translator_String[]
     */
     public function getStrings()
     {
@@ -391,17 +394,19 @@ class Translator
             self::ERROR_CANNOT_GET_UNKNOWN_STRING
         );
     }
-    
-   /**
-    * Renders the XML document containing the strings to 
-    * translate, which is sent to DeepL. 
-    * 
-    * @return string
-    */
-    protected function renderXML() : string
+
+    /**
+     * Renders the XML document containing the strings to
+     * translate, which is sent to DeepL.
+     *
+     * @return string
+     * @throws Translator_Exception
+     */
+    private function renderXML() : string
     {
-        $xml = \AppUtils\XMLHelper::create();
+        $xml = XMLHelper::create();
         $root = $xml->createRoot('document');
+        $text = '';
         
         foreach($this->strings as $string) 
         {
@@ -409,9 +414,9 @@ class Translator
             {
                 $text = $string->getPreparedText();
                 
-                if(\AppUtils\ConvertHelper::isStringHTML($text)) 
+                if(ConvertHelper::isStringHTML($text))
                 {
-                    $fragment = \AppUtils\XMLHelper::string2xml($text);
+                    $fragment = XMLHelper::string2xml($text);
                     $tag = $xml->addFragmentTag($root, self::SPLITTING_TAG, $fragment);
                 }
                 else
@@ -435,9 +440,7 @@ class Translator
             $xml->addAttribute($tag, 'id', $string->getID());
         }
         
-        $markup = $xml->saveXML();
-        
-        return $markup;
+        return $xml->saveXML();
     }
     
    /**
@@ -451,7 +454,7 @@ class Translator
     * @param string $xml
     * @throws Translator_Exception
     */
-    protected function parseXMLResult(string $xml) : void
+    private function parseXMLResult(string $xml) : void
     {
         $dom = new \DOMDocument();
         $dom->preserveWhiteSpace = false;
@@ -522,8 +525,8 @@ class Translator
         }
     }
     
-    protected function prettifyXML(string $xml)
+    private function prettifyXML(string $xml) : string
     {
-        return \AppUtils\Highlighter::xml($xml, true); 
+        return Highlighter::xml($xml, true);
     }
 }

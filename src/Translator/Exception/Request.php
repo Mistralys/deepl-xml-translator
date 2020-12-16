@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace DeeplXML;
 
+use AppUtils\ConvertHelper;
 use GuzzleHttp\Exception\ClientException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Scn\DeeplApiConnector\Exception\RequestException;
 use Scn\DeeplApiConnector\Model\TranslationConfig;
+use function AppUtils\parseVariable;
 
 class Translator_Exception_Request extends Translator_Exception
 {
@@ -144,7 +146,16 @@ class Translator_Exception_Request extends Translator_Exception
 
         if(!$ex)
         {
-            return $this->renderText(sprintf('An exception of type [%s] occurred.'), $html);
+            return $this->renderText(sprintf(
+                'An exception of type [%1$s] occurred.<br>'.
+                'Source language: %2$s<br>'.
+                'Target language: %3$s<br>'.
+                'Submitted XML:<pre>%4$s</pre>',
+                parseVariable($this->getPrevious())->enableType()->toString(),
+                $this->config->getSourceLang(),
+                $this->config->getTargetLang(),
+                $this->filterHTML($this->getXML(), $html)
+            ), $html);
         }
 
         $request = $ex->getRequest();
