@@ -1,6 +1,6 @@
 {
 	"name" : "mistralys/deepl-xml-translator",
-	"description" : "PHP and Javascript localization library.",
+	"description" : "DeepL XML Translator.",
 	"type" : "library",
     "license" : "GPL-3.0-or-later",
 	"authors" : 
