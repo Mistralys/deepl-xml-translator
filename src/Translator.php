@@ -10,6 +10,14 @@ declare(strict_types=1);
 
 namespace DeeplXML;
 
+use GuzzleHttp\Client;
+use Scn\DeeplApiConnector\DeeplClient;
+use Scn\DeeplApiConnector\Enum\TextHandlingEnum;
+use Scn\DeeplApiConnector\Handler\DeeplRequestFactory;
+use Scn\DeeplApiConnector\Model\ResponseModelInterface;
+use Scn\DeeplApiConnector\Model\Translation;
+use Scn\DeeplApiConnector\Model\TranslationConfig;
+
 /**
  * DeepL translation helper, to easily translate strings
  * using the DeepL API. Uses the <code>scn/deepl-api-connector</code>
@@ -22,18 +30,13 @@ namespace DeeplXML;
 class Translator
 {
     const ERROR_STRING_ID_ALREADY_EXISTS = 37601;
-    
     const ERROR_NO_STRINGS_TO_TRANSLATE = 37602;
-    
     const ERROR_FAILED_CONVERTING_TEXT = 37603;
-    
     const ERROR_MISSING_ID_ATTRIBUTE_IN_RESPONSE = 37604;
-    
     const ERROR_RESPONSE_STRING_DOES_NOT_EXIST = 37605;
-    
     const ERROR_STRING_NOT_FOUND_IN_RESULT = 37506;
-    
     const ERROR_CANNOT_GET_UNKNOWN_STRING = 37507;
+    const ERROR_TRANSLATION_REQUEST_FAILED = 37508;
     
    /**
     * The name of the XML tag to use to store individual texts in
@@ -48,7 +51,7 @@ class Translator
     const IGNORE_TAG = 'deeplignore'; 
     
     /**
-     * @var \Scn\DeeplApiConnector\DeeplClient[]
+     * @var DeeplClient[]
      * @see Translator::initDeepL()
      */
     protected static $deepl = array();
@@ -149,8 +152,6 @@ class Translator
     * Initializes the DeepL connection - this is only done
     * once, and shared between all translator instances, per
     * API key to allow different API keys.
-    * 
-    * @throws Translator_Exception
     */
     protected function initDeepL()
     {
@@ -158,9 +159,9 @@ class Translator
             return;
         }
          
-        self::$deepl[$this->apiKey] = new \Scn\DeeplApiConnector\DeeplClient(
-            new \GuzzleHttp\Client($this->compileRequestOptions()),
-            new \Scn\DeeplApiConnector\Handler\DeeplRequestFactory($this->apiKey)
+        self::$deepl[$this->apiKey] = new DeeplClient(
+            new Client($this->compileRequestOptions()),
+            new DeeplRequestFactory($this->apiKey)
         );
     }
     
@@ -196,9 +197,9 @@ class Translator
     * Retrieves the DeepL API connection, to be able to run more
     * advanced translation tasks.
     * 
-    * @return \Scn\DeeplApiConnector\DeeplClient
+    * @return DeeplClient
     */
-    public function getConnector() : \Scn\DeeplApiConnector\DeeplClient
+    public function getConnector() : DeeplClient
     {
         $this->initDeepL();
         
@@ -234,14 +235,15 @@ class Translator
         
         return $string;
     }
-    
-   /**
-    * Retrieves the XML that the translator sends to DeepL
-    * to be translated.
-    * 
-    * @return string
-    * @see Translator::renderXML()
-    */
+
+    /**
+     * Retrieves the XML that the translator sends to DeepL
+     * to be translated.
+     *
+     * @return string
+     * @throws Translator_Exception
+     * @see Translator::renderXML()
+     */
     public function getXML() : string
     {
         return $this->renderXML();
@@ -252,6 +254,10 @@ class Translator
     * can be accessed via the string instances themselves.
     * 
     * @throws Translator_Exception
+    * @throws Translator_Exception_Request
+    *
+    * @see Translator::ERROR_NO_STRINGS_TO_TRANSLATE
+    * @see Translator::ERROR_TRANSLATION_REQUEST_FAILED
     */
     public function translate() : void
     {
@@ -271,17 +277,17 @@ class Translator
         
         $sourceXML = $this->renderXML();
         
-        $config = new \Scn\DeeplApiConnector\Model\TranslationConfig(
+        $config = new TranslationConfig(
             $sourceXML,
             $this->targetLang,
             $this->sourceLang
         );
         
         $config->setTagHandling(array('xml'));
-        $config->setPreserveFormatting(\Scn\DeeplApiConnector\Enum\TextHandlingEnum::PRESERVEFORMATTING_ON);
+        $config->setPreserveFormatting(TextHandlingEnum::PRESERVEFORMATTING_ON);
         $config->setSourceLang($this->sourceLang);
         $config->setTargetLang($this->targetLang);
-        $config->setSplitSentences(\Scn\DeeplApiConnector\Enum\TextHandlingEnum::SPLITSENTENCES_NONEWLINES);
+        $config->setSplitSentences(TextHandlingEnum::SPLITSENTENCES_NONEWLINES);
         $config->setIgnoreTags(array(self::IGNORE_TAG));
 
         $cacheID = null;
@@ -298,12 +304,28 @@ class Translator
         
         if($xml === null)
         {
-            /* @var $translation \Scn\DeeplApiConnector\Model\Translation */
-            
-            $translation = self::$deepl[$this->apiKey]->getTranslation($config);
-            
-            $xml = $translation->getText();
-            
+            try
+            {
+                $translation = $this->getTranslation($config);
+
+                $xml = $translation->getText();
+            }
+            catch(\Exception $e)
+            {
+                $ex = new Translator_Exception_Request(
+                    'The translation request failed',
+                    '',
+                    self::ERROR_TRANSLATION_REQUEST_FAILED,
+                    $e
+                );
+
+                $ex->setTranslator($this);
+                $ex->setXML($sourceXML);
+                $ex->setConfig($config);
+
+                throw $ex;
+            }
+
             if($cacheID !== null) {
                 $_SESSION[$cacheID] = $xml;
             }
@@ -312,6 +334,11 @@ class Translator
         $this->parseXMLResult($xml);
 
         $this->translated = true;
+    }
+
+    private function getTranslation(TranslationConfig $config) : ResponseModelInterface
+    {
+        return self::$deepl[$this->apiKey]->getTranslation($config);
     }
     
    /**
