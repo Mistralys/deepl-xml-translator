@@ -37,7 +37,10 @@ class Translator_String
     * @var string
     */
     protected $translated = '';
-    
+
+    /**
+     * @var string[]
+     */
     protected $ignore = array();
     
     public function __construct(Translator $translator, string $id, string $original)
@@ -90,15 +93,16 @@ class Translator_String
         
         return $text;
     }
-    
-   /**
-    * Adds a string to ignore during the translation: any
-    * occurrences of the string in the text to translate 
-    * will be ignored by DeepL.
-    * 
-    * @param string $string
-    */
-    public function addIgnoreString($string) : Translator_String
+
+    /**
+     * Adds a string to ignore during the translation: any
+     * occurrences of the string in the text to translate
+     * will be ignored by DeepL.
+     *
+     * @param string $string
+     * @return Translator_String
+     */
+    public function addIgnoreString(string $string) : Translator_String
     {
         if(!in_array($string, $this->ignore)) {
             $this->ignore[] = $string;
@@ -138,7 +142,8 @@ class Translator_String
     * automatically if the text has not been translated yet.
     * 
     * @return string
-    * @throws Translator_Exception 
+    * @throws Translator_Exception
+    * @throws Translator_Exception_Request
     */
     public function getTranslatedText() : string
     {
@@ -160,6 +165,8 @@ class Translator_String
     * Alias for calling {@link Translator::translate()}.
     * 
     * @see Translator::translate()
+    * @throws Translator_Exception
+    * @throws Translator_Exception_Request
     */
     public function translate() : void
     {
