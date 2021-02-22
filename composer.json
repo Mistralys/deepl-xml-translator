@@ -27,7 +27,7 @@
 	"require" : 
 	{
 		"mistralys/application-utils" : ">=1.3.0",
-		"scn/deepl-api-connector": "dev-master",
+		"scn/deepl-api-connector": ">=v2.1.2",
       	"ext-dom": "*"
     },
 	"require-dev" : 
