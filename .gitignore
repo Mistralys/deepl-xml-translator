@@ -6,3 +6,4 @@ composer.lock
 docs/config/cache
 docs/config/resultCache.php
 docs/phpstan/output.txt
+/composer.phar
