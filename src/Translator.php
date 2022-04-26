@@ -13,15 +13,21 @@ namespace DeeplXML;
 use AppUtils\ConvertHelper;
 use AppUtils\Highlighter;
 use AppUtils\XMLHelper;
+use DOMDocument;
+use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 use Scn\DeeplApiConnector\DeeplClient;
 use Scn\DeeplApiConnector\DeeplClientFactory;
 use Scn\DeeplApiConnector\Enum\TextHandlingEnum;
+use Scn\DeeplApiConnector\Exception\RequestException;
 use Scn\DeeplApiConnector\Model\ResponseModelInterface;
+use Scn\DeeplApiConnector\Model\Translation;
 use Scn\DeeplApiConnector\Model\TranslationConfig;
+use function AppUtils\parseVariable;
 
 /**
- * DeepL translation helper, to easily translate strings
+ * "DeepL" translation helper, to easily translate strings
  * using the DeepL API. Uses the <code>scn/deepl-api-connector</code>
  * package as backend to handle the communication with the
  * server, and wraps a self explaining interface over it.
@@ -31,69 +37,49 @@ use Scn\DeeplApiConnector\Model\TranslationConfig;
  */
 class Translator
 {
-    const ERROR_STRING_ID_ALREADY_EXISTS = 37601;
-    const ERROR_NO_STRINGS_TO_TRANSLATE = 37602;
-    const ERROR_FAILED_CONVERTING_TEXT = 37603;
-    const ERROR_MISSING_ID_ATTRIBUTE_IN_RESPONSE = 37604;
-    const ERROR_RESPONSE_STRING_DOES_NOT_EXIST = 37605;
-    const ERROR_STRING_NOT_FOUND_IN_RESULT = 37506;
-    const ERROR_CANNOT_GET_UNKNOWN_STRING = 37507;
-    const ERROR_TRANSLATION_REQUEST_FAILED = 37508;
+    public const ERROR_STRING_ID_ALREADY_EXISTS = 37601;
+    public const ERROR_NO_STRINGS_TO_TRANSLATE = 37602;
+    public const ERROR_FAILED_CONVERTING_TEXT = 37603;
+    public const ERROR_MISSING_ID_ATTRIBUTE_IN_RESPONSE = 37604;
+    public const ERROR_RESPONSE_STRING_DOES_NOT_EXIST = 37605;
+    public const ERROR_STRING_NOT_FOUND_IN_RESULT = 37506;
+    public const ERROR_CANNOT_GET_UNKNOWN_STRING = 37507;
+    public const ERROR_TRANSLATION_REQUEST_FAILED = 37508;
+    public const ERROR_UNSUPPORTED_TRANSLATION_RESULT = 37509;
     
    /**
     * The name of the XML tag to use to store individual texts in
     * @var string
     */
-    const SPLITTING_TAG = 'deeplstring';
+    public const SPLITTING_TAG = 'deeplstring';
    
    /**
     * The name of the XML tag used to tell DeepL to ignore contents.
     * @var string
     */
-    const IGNORE_TAG = 'deeplignore'; 
+    public const IGNORE_TAG = 'deeplignore'; 
     
     /**
      * @var array<string,DeeplClient|null>
      * @see Translator::initDeepL()
      */
-    protected static $deepl = array();
+    protected static array $deepl = array();
     
    /**
     * @var Translator_String[]
     */
-    protected $strings = array();
+    protected array $strings = array();
     
-   /**
-    * @var string
-    */
-    protected $sourceLang;
-    
-   /**
-    * @var string
-    */
-    protected $targetLang;
-    
-   /**
-    * @var bool
-    */
-    protected $translated = false;
-    
-   /**
-    * @var string
-    */
-    protected $apiKey;
-    
-   /**
-    * @var bool
-    */
-    protected $simulate = false;
-    
-   /**
-    * @var string
-    */
-    protected $proxy;
-    
-   /**
+    protected string $sourceLang;
+    protected string $targetLang;
+    protected bool $translated = false;
+    protected string $apiKey;
+    protected bool $simulate = false;
+    protected string $proxy = '';
+    private float $timeOut = 8.0;
+    private bool $requestDebugging = false;
+
+    /**
     * Create a new translation helper for the specified languages.
     * 
     * @param string $apiKey The API key to use to connect to the DeepL API
@@ -106,7 +92,24 @@ class Translator
         $this->sourceLang = strtoupper($sourceLang);
         $this->targetLang = strtoupper($targetLang);
     }
-    
+
+    public function setTimeOut(float $timeOut) : self
+    {
+        $this->timeOut = $timeOut;
+        return $this;
+    }
+
+    public function getTimeOut() : float
+    {
+        return $this->timeOut;
+    }
+
+    public function enableRequestDebug(bool $enable) : self
+    {
+        $this->requestDebugging = $enable;
+        return $this;
+    }
+
     public function getSourceLanguage() : string
     {
         return $this->sourceLang;
@@ -189,8 +192,11 @@ class Translator
         
         if(isset($this->proxy)) 
         {
-            $options['proxy'] = $this->proxy;
+            $options[RequestOptions::PROXY] = $this->proxy;
         }
+
+        $options[RequestOptions::CONNECT_TIMEOUT] = $this->timeOut;
+        $options[RequestOptions::DEBUG] = $this->requestDebugging;
         
         return $options;
     }
@@ -310,9 +316,23 @@ class Translator
             {
                 $translation = $this->getTranslation($config);
 
-                $xml = $translation->getText();
+                if($translation instanceof Translation)
+                {
+                    $xml = $translation->getText();
+                }
+                else
+                {
+                    throw new Translator_Exception(
+                        'Unsupported translation result',
+                        sprintf(
+                            'The class instance of type [%s] is unhandled.',
+                            parseVariable($translation)->enableType()->toString()
+                        ),
+                        self::ERROR_UNSUPPORTED_TRANSLATION_RESULT
+                    );
+                }
             }
-            catch(\Exception $e)
+            catch(Exception $e)
             {
                 $ex = new Translator_Exception_Request(
                     'The translation request failed',
@@ -338,11 +358,14 @@ class Translator
         $this->translated = true;
     }
 
+    /**
+     * @throws RequestException
+     */
     private function getTranslation(TranslationConfig $config) : ResponseModelInterface
     {
-        return self::$deepl[$this->apiKey]->getTranslation($config);
+        return $this->getConnector()->getTranslation($config);
     }
-    
+
    /**
     * Whether the strings have been translated.
     * @return bool
@@ -356,7 +379,7 @@ class Translator
     * Retrieves all strings that were added to translate.
     * @return Translator_String[]
     */
-    public function getStrings()
+    public function getStrings() : array
     {
         return array_values($this->strings);
     }
@@ -423,7 +446,7 @@ class Translator
                     $tag = $xml->addTextTag($root, self::SPLITTING_TAG, $text);
                 }
             }
-            catch(\Exception $e) 
+            catch(Exception $e)
             {
                 throw new Translator_Exception(
                     'Failed to convert text snippet',
@@ -455,7 +478,7 @@ class Translator
     */
     private function parseXMLResult(string $xml) : void
     {
-        $dom = new \DOMDocument();
+        $dom = new DOMDocument();
         $dom->preserveWhiteSpace = false;
         $dom->loadXML($xml);
         
@@ -465,7 +488,7 @@ class Translator
         
         foreach($nodes as $node) 
         {
-            $stringID = $node->getAttribute('id');
+            $stringID = (string)$node->getAttribute('id');
             
             $results[] = $stringID;
             
@@ -509,7 +532,7 @@ class Translator
         {
             $stringID = $string->getID();
             
-            if(!in_array($stringID, $results)) {
+            if(!in_array($stringID, $results, true)) {
                 throw new Translator_Exception(
                     'String not found in result',
                     sprintf(
