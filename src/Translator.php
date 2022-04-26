@@ -15,17 +15,16 @@ use AppUtils\Highlighter;
 use AppUtils\XMLHelper;
 use GuzzleHttp\Client;
 use Scn\DeeplApiConnector\DeeplClient;
+use Scn\DeeplApiConnector\DeeplClientFactory;
 use Scn\DeeplApiConnector\Enum\TextHandlingEnum;
-use Scn\DeeplApiConnector\Handler\DeeplRequestFactory;
 use Scn\DeeplApiConnector\Model\ResponseModelInterface;
-use Scn\DeeplApiConnector\Model\Translation;
 use Scn\DeeplApiConnector\Model\TranslationConfig;
 
 /**
  * DeepL translation helper, to easily translate strings
  * using the DeepL API. Uses the <code>scn/deepl-api-connector</code>
  * package as backend to handle the communication with the
- * server, and wraps a self explaining inteface over it.
+ * server, and wraps a self explaining interface over it.
  * 
  * @package DeeplXML
  * @author Sebastian Mordziol <s.mordziol@mistralys.eu>
@@ -161,10 +160,10 @@ class Translator
         if(isset(self::$deepl[$this->apiKey])) {
             return;
         }
-         
-        self::$deepl[$this->apiKey] = new DeeplClient(
-            new Client($this->compileRequestOptions()),
-            new DeeplRequestFactory($this->apiKey)
+
+        self::$deepl[$this->apiKey] = DeeplClientFactory::create(
+            $this->apiKey,
+            new Client($this->compileRequestOptions())
         );
     }
     
