@@ -1,4 +1,4 @@
-## v2.0.0 - Dependency update release
+## v2.0.0 - Dependency update release, PHP 7.4
 
 - New PHP version requirement: v7.4+
 - Upgraded to `scn/deepl-api-connector` v3.x branch.
