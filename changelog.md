@@ -1,4 +1,8 @@
-## v2.0.1 - 
+## v2.0.1 - Minor feature release 
+
+- Added `setTimeOut()` and `getTimeOut()`.
+- Added `enableRequestDebug()` to debug connection issues.
+- Now using Guzzle constants for options.
 
 ## v2.0.0 - Dependency update release, PHP 7.4
 
