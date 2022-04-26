@@ -10,6 +10,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Scn\DeeplApiConnector\Exception\RequestException;
 use Scn\DeeplApiConnector\Model\TranslationConfig;
+use function AppUtils\parseThrowable;
 use function AppUtils\parseVariable;
 
 class Translator_Exception_Request extends Translator_Exception
@@ -143,18 +144,23 @@ class Translator_Exception_Request extends Translator_Exception
     public function renderAnalysis(bool $html=false) : string
     {
         $ex = $this->getGuzzleException();
+        $previous = $this->getPrevious();
+        $message = parseThrowable($this)->renderErrorMessage(true);
 
         if(!$ex)
         {
             return $this->renderText(sprintf(
                 'An exception of type [%1$s] occurred.<br>'.
+                'Exception info:<br>'.
+                '%5$s<br>'.
                 'Source language: %2$s<br>'.
                 'Target language: %3$s<br>'.
                 'Submitted XML:<pre>%4$s</pre>',
-                parseVariable($this->getPrevious())->enableType()->toString(),
+                parseVariable($previous)->enableType()->toString(),
                 $this->config->getSourceLang(),
                 $this->config->getTargetLang(),
-                $this->filterHTML($this->getXML(), $html)
+                $this->filterHTML($this->getXML(), $html),
+                $message
             ), $html);
         }
 
