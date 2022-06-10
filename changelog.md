@@ -3,6 +3,7 @@
 - Added `setTimeOut()` and `getTimeOut()`.
 - Added `enableRequestDebug()` to debug connection issues.
 - Now using Guzzle constants for options.
+- Bumped Guzzle version to fix a vulnerability.
 
 ## v2.0.0 - Dependency update release, PHP 7.4
 
