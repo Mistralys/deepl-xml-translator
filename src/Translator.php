@@ -46,7 +46,9 @@ class Translator
     public const ERROR_CANNOT_GET_UNKNOWN_STRING = 37507;
     public const ERROR_TRANSLATION_REQUEST_FAILED = 37508;
     public const ERROR_UNSUPPORTED_TRANSLATION_RESULT = 37509;
-    
+    public const ERROR_EMPTY_XML_DOCUMENT = 37510;
+    public const ERROR_TRANSLATION_RESULT_EMPTY = 37511;
+
    /**
     * The name of the XML tag to use to store individual texts in
     * @var string
@@ -284,7 +286,7 @@ class Translator
         $this->initDeepL();
         
         $sourceXML = $this->renderXML();
-        
+
         $config = new TranslationConfig(
             $sourceXML,
             $this->targetLang,
@@ -352,7 +354,22 @@ class Translator
                 $_SESSION[$cacheID] = $xml;
             }
         }
-        
+
+        if(empty($xml))
+        {
+            $ex = new Translator_Exception_Request(
+                'No translation result XML returned.',
+                'The result XML returned by the service was empty. Typically, this happens if the request to the DeepL service returned a 403: Forbidden, which points to an API key issue.',
+                self::ERROR_TRANSLATION_RESULT_EMPTY
+            );
+
+            $ex->setTranslator($this);
+            $ex->setXML($sourceXML);
+            $ex->setConfig($config);
+
+            throw $ex;
+        }
+
         $this->parseXMLResult($xml);
 
         $this->translated = true;
@@ -478,6 +495,16 @@ class Translator
     */
     private function parseXMLResult(string $xml) : void
     {
+        $xml = trim($xml);
+
+        if(empty($xml)) {
+            throw new Translator_Exception(
+                'Empty XML translation document',
+                'The specified XML code is an empty string.',
+                self::ERROR_EMPTY_XML_DOCUMENT
+            );
+        }
+
         $dom = new DOMDocument();
         $dom->preserveWhiteSpace = false;
         $dom->loadXML($xml);
