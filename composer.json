@@ -11,13 +11,15 @@
 			"role" : "Lead"
 		}
 	],
-	"autoload" : 
-	{
-		"psr-4" : 
+	"repositories": [
 		{
-			"DeeplXML\\" : "src/"
-		},
-		"classmap" : 
+			"type": "vcs",
+			"url": "https://github.com/Mistralys/deepl-api-connector.git"
+		}
+	],
+	"autoload" :
+	{
+		"classmap" :
 		[
 			"src/"
 		]
@@ -27,7 +29,7 @@
 	"require" : 
 	{
 		"mistralys/application-utils" : ">=1.3.0",
-		"scn/deepl-api-connector": "^v3.0",
+		"scn/deepl-api-connector": "dev-master",
 		"guzzlehttp/guzzle": "^7.4.2",
       	"ext-dom": "*",
 		"ext-openssl": "*"
