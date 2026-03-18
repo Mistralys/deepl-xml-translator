@@ -1,3 +1,7 @@
+### v2.0.3 - Bugfix release
+- Improved exception diagnostics: `Translator_Exception_Request::getDetails()` now returns the full `renderAnalysis()` output, so the submitted XML, language pair, and cause description are visible in any standard exception display without needing to call `renderAnalysis()` explicitly.
+- Improved the no-HTTP-exception branch of `renderAnalysis()` to show a specific message when no Guzzle exception is present, rather than the unhelpful "An exception of type [NULL] occurred."
+
 ### v2.0.2 - Bugfix release
 - Fixed a PHP error via a temporary fork of the `scn/deepl-api-connector` package.
 - Added error checks when Deepl returns an empty result.
