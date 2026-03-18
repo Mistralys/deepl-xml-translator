@@ -464,7 +464,7 @@ class Translator
     * @param string $xml
     * @throws Translator_Exception
     */
-    private function parseXMLResult(string $xml) : void
+    protected function parseXMLResult(string $xml) : void
     {
         $xml = trim($xml);
 

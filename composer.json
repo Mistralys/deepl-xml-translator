@@ -29,6 +29,13 @@
       	"ext-dom": "*",
 		"ext-openssl": "*"
     },
+	"autoload-dev" :
+	{
+		"classmap" :
+		[
+			"tests/classes/"
+		]
+	},
 	"require-dev" :
 	{
 		"phpunit/phpunit" : "^12.0",
