@@ -26,17 +26,35 @@
 	},
 	"minimum-stability" : "dev",
 	"prefer-stable" : true,
-	"require" : 
+	"require" :
 	{
+		"php": "^8.4",
 		"mistralys/application-utils" : ">=1.3.0",
 		"scn/deepl-api-connector": "dev-master",
 		"guzzlehttp/guzzle": "^7.4.2",
       	"ext-dom": "*",
 		"ext-openssl": "*"
     },
-	"require-dev" : 
+	"require-dev" :
 	{
-		"phpunit/phpunit" : ">=9.5.20",
-		"phpstan/phpstan": ">=1.6.0"
+		"phpunit/phpunit" : "^12.0",
+		"phpstan/phpstan": ">=2.1",
+		"phpstan/phpstan-phpunit": "^2.0",
+		"roave/security-advisories": "dev-latest"
+	},
+	"config": {
+		"allow-plugins": {
+			"php-http/discovery": true
+		}
+	},
+	"scripts": {
+		"analyze": "php vendor/bin/phpstan analyse --configuration phpstan.neon --memory-limit=900M",
+		"analyze-save": "php vendor/bin/phpstan analyse --configuration phpstan.neon --memory-limit=900M > phpstan-result.txt || true",
+		"analyze-clear": "php vendor/bin/phpstan clear-result-cache",
+		"test": "php vendor/bin/phpunit",
+		"test-file": "php vendor/bin/phpunit --no-progress",
+		"test-suite": "php vendor/bin/phpunit --no-progress --testsuite",
+		"test-filter": "php vendor/bin/phpunit --no-progress --filter",
+		"test-group": "php vendor/bin/phpunit --no-progress --group"
 	}
 }

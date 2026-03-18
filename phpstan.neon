@@ -1,7 +1,8 @@
 parameters:
+    level: 6
     tmpDir: ./
-    excludes_analyse:
+    excludePaths:
         - tests/*
         - vendor/*
     paths:
-        - ../../src
+        - src
