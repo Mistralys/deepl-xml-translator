@@ -6,3 +6,6 @@ docs/config/cache
 docs/config/resultCache.php
 docs/phpstan/output.txt
 /composer.phar
+.phpunit.cache/test-results
+/cache
+resultCache.php
