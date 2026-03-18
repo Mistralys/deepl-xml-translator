@@ -4,10 +4,16 @@
 - Composer: Replaced unmaintained `scn/deepl-api-connector` with the official `deeplcom/deepl-php` library.
 - Translator: `getConnector()` now returns `\DeepL\Translator` instead of the former SCN client.
 - Exception: `getConfig()` and `setConfig()` removed; replaced by `getSourceLanguage()`, `getTargetLanguage()`, and `setLanguages()`.
+- Tests: Added test suites covering XML translation, string translation, exception handling, and offline behaviour.
+- Code: Changed `parseXMLResult()` visibility to `protected` to support testability.
 
 ### Breaking Changes
 
-The `scn/deepl-api-connector` package has been replaced with the official `deeplcom/deepl-php` library. `Translator::getConnector()` now returns `\DeepL\Translator` — any code calling methods directly on the returned connector must be updated to use the new API. The `getConfig()` and `setConfig()` methods on `Translator_Exception_Request` have been removed; use `getSourceLanguage()`, `getTargetLanguage()`, and `setLanguages()` instead.
+The `scn/deepl-api-connector` package has been replaced with the official `deeplcom/deepl-php` library.
+`Translator::getConnector()` now returns `\DeepL\Translator` — any code calling methods directly on the
+returned connector must be updated to use the new API. The `getConfig()` and `setConfig()` methods on
+`Translator_Exception_Request` have been removed; use `getSourceLanguage()`, `getTargetLanguage()`, and
+`setLanguages()` instead.
 
 ## v2.0.3 - Improved exception diagnostics
 - Exception: `getDetails()` now returns the full diagnostic analysis, visible in any standard exception display.
