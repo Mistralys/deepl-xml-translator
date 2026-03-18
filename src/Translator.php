@@ -15,20 +15,14 @@ use AppUtils\Highlighter;
 use AppUtils\XMLHelper;
 use DOMDocument;
 use Exception;
+use DeepL\TranslateTextOptions;
+use DeepL\Translator as DeeplTranslator;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
-use Scn\DeeplApiConnector\DeeplClient;
-use Scn\DeeplApiConnector\DeeplClientFactory;
-use Scn\DeeplApiConnector\Enum\TextHandlingEnum;
-use Scn\DeeplApiConnector\Exception\RequestException;
-use Scn\DeeplApiConnector\Model\ResponseModelInterface;
-use Scn\DeeplApiConnector\Model\Translation;
-use Scn\DeeplApiConnector\Model\TranslationConfig;
-use function AppUtils\parseVariable;
 
 /**
  * "DeepL" translation helper, to easily translate strings
- * using the DeepL API. Uses the <code>scn/deepl-api-connector</code>
+ * using the DeepL API. Uses the <code>deeplcom/deepl-php</code>
  * package as backend to handle the communication with the
  * server, and wraps a self explaining interface over it.
  * 
@@ -62,7 +56,7 @@ class Translator
     public const IGNORE_TAG = 'deeplignore'; 
     
     /**
-     * @var array<string,DeeplClient|null>
+     * @var array<string,DeeplTranslator|null>
      * @see Translator::initDeepL()
      */
     protected static array $deepl = array();
@@ -166,9 +160,9 @@ class Translator
             return;
         }
 
-        self::$deepl[$this->apiKey] = DeeplClientFactory::create(
+        self::$deepl[$this->apiKey] = new DeeplTranslator(
             $this->apiKey,
-            new Client($this->compileRequestOptions())
+            ['http_client' => new Client($this->compileRequestOptions())]
         );
     }
     
@@ -206,10 +200,10 @@ class Translator
    /**
     * Retrieves the DeepL API connection, to be able to run more
     * advanced translation tasks.
-    * 
-    * @return DeeplClient
+    *
+    * @return DeeplTranslator
     */
-    public function getConnector() : DeeplClient
+    public function getConnector() : DeeplTranslator
     {
         $this->initDeepL();
         
@@ -287,52 +281,37 @@ class Translator
         
         $sourceXML = $this->renderXML();
 
-        $config = new TranslationConfig(
-            $sourceXML,
-            $this->targetLang,
-            $this->sourceLang
-        );
-        
-        $config->setTagHandling(array('xml'));
-        $config->setPreserveFormatting(TextHandlingEnum::PRESERVEFORMATTING_ON);
-        $config->setSourceLang($this->sourceLang);
-        $config->setTargetLang($this->targetLang);
-        $config->setSplitSentences(TextHandlingEnum::SPLITSENTENCES_NONEWLINES);
-        $config->setIgnoreTags(array(self::IGNORE_TAG));
+        $options = [
+            TranslateTextOptions::TAG_HANDLING => 'xml',
+            TranslateTextOptions::PRESERVE_FORMATTING => true,
+            TranslateTextOptions::SPLIT_SENTENCES => 'nonewlines',
+            TranslateTextOptions::IGNORE_TAGS => [self::IGNORE_TAG],
+        ];
 
         $cacheID = null;
         $xml = null;
-        
+
         if($this->simulate)
         {
             $cacheID = 'deepl-'.md5($sourceXML);
-        
+
             if(isset($_SESSION[$cacheID])) {
                 $xml = $_SESSION[$cacheID];
             }
         }
-        
+
         if($xml === null)
         {
             try
             {
-                $translation = $this->getTranslation($config);
+                $result = $this->getConnector()->translateText(
+                    $sourceXML,
+                    $this->sourceLang,
+                    $this->targetLang,
+                    $options
+                );
 
-                if($translation instanceof Translation)
-                {
-                    $xml = $translation->getText();
-                }
-                else
-                {
-                    throw new Translator_Exception(
-                        'Unsupported translation result',
-                        sprintf(
-                            'The class instance of type [%s] is unhandled.',
-                            parseVariable($translation)->enableType()->toString()
-                        ),
-                        self::ERROR_UNSUPPORTED_TRANSLATION_RESULT
-                    );
-                }
+                $xml = $result->text;
             }
             catch(Exception $e)
             {
@@ -345,7 +324,7 @@ class Translator
 
                 $ex->setTranslator($this);
                 $ex->setXML($sourceXML);
-                $ex->setConfig($config);
+                $ex->setLanguages($this->sourceLang, $this->targetLang);
 
                 throw $ex;
             }
@@ -365,7 +344,7 @@ class Translator
 
             $ex->setTranslator($this);
             $ex->setXML($sourceXML);
-            $ex->setConfig($config);
+            $ex->setLanguages($this->sourceLang, $this->targetLang);
 
             throw $ex;
         }
@@ -373,14 +352,6 @@ class Translator
         $this->parseXMLResult($xml);
 
         $this->translated = true;
-    }
-
-    /**
-     * @throws RequestException
-     */
-    private function getTranslation(TranslationConfig $config) : ResponseModelInterface
-    {
-        return $this->getConnector()->getTranslation($config);
     }
 
    /**

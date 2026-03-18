@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace DeeplXML;
 
-use AppUtils\ConvertHelper;
+use DeepL\DeepLException;
 use GuzzleHttp\Exception\ClientException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Scn\DeeplApiConnector\Exception\RequestException;
-use Scn\DeeplApiConnector\Model\TranslationConfig;
 use function AppUtils\parseThrowable;
 use function AppUtils\parseVariable;
 
@@ -21,9 +19,14 @@ class Translator_Exception_Request extends Translator_Exception
     private $translator;
 
     /**
-     * @var TranslationConfig
+     * @var string
      */
-    private $config;
+    private string $sourceLang = '';
+
+    /**
+     * @var string
+     */
+    private string $targetLang = '';
 
     /**
      * @var string
@@ -44,9 +47,10 @@ class Translator_Exception_Request extends Translator_Exception
         $this->translator = $translator;
     }
 
-    public function setConfig(TranslationConfig $config): void
+    public function setLanguages(string $sourceLang, string $targetLang): void
     {
-        $this->config = $config;
+        $this->sourceLang = $sourceLang;
+        $this->targetLang = $targetLang;
     }
 
     public function setXML(string $xml): void
@@ -56,17 +60,17 @@ class Translator_Exception_Request extends Translator_Exception
 
     /**
      * Overrides the default details getter to return the full
-     * diagnostic analysis when config and XML are available.
+     * diagnostic analysis when language and XML are available.
      * Falls back to the constructor-provided details string
      * while the exception is still being constructed (i.e. before
-     * setConfig() / setXML() have been called) or during the
+     * setLanguages() / setXML() have been called) or during the
      * internal renderAnalysis() call to avoid recursion.
      *
      * @return string
      */
     public function getDetails() : string
     {
-        if($this->computingDetails || $this->config === null || $this->xml === null)
+        if($this->computingDetails || empty($this->sourceLang) || $this->xml === null)
         {
             return parent::getDetails();
         }
@@ -83,15 +87,14 @@ class Translator_Exception_Request extends Translator_Exception
         return $this->translator;
     }
 
-    /**
-     * Retrieves the `deepl-api-connector` configuration used
-     * for the DeepL request.
-     *
-     * @return TranslationConfig
-     */
-    public function getConfig(): TranslationConfig
+    public function getSourceLanguage(): string
     {
-        return $this->config;
+        return $this->sourceLang;
+    }
+
+    public function getTargetLanguage(): string
+    {
+        return $this->targetLang;
     }
 
     /**
@@ -125,7 +128,7 @@ class Translator_Exception_Request extends Translator_Exception
     {
         $previous = $this->getPrevious();
 
-        if(!$previous instanceof RequestException)
+        if(!$previous instanceof DeepLException)
         {
             return null;
         }
@@ -194,8 +197,8 @@ class Translator_Exception_Request extends Translator_Exception
                 'Target language: %3$s<br>'.
                 'Submitted XML:<pre>%4$s</pre>',
                 $previousInfo,
-                $this->config->getSourceLang(),
-                $this->config->getTargetLang(),
+                $this->sourceLang,
+                $this->targetLang,
                 $this->filterHTML($this->getXML(), $html),
                 $message
             ), $html);
@@ -221,8 +224,8 @@ class Translator_Exception_Request extends Translator_Exception
             $request->getBody()->getSize(),
             $this->filterHTML($request->getBody()->getContents(), $html),
             $this->filterHTML($this->getXML(), $html),
-            $this->config->getSourceLang(),
-            $this->config->getTargetLang()
+            $this->sourceLang,
+            $this->targetLang
         ), $html);
     }
 

@@ -1,5 +1,14 @@
 # DeepL XML Translator Changelog
 
+## v3.0.0 - Switched to Official DeepL Library (Breaking-M)
+- Composer: Replaced unmaintained `scn/deepl-api-connector` with the official `deeplcom/deepl-php` library.
+- Translator: `getConnector()` now returns `\DeepL\Translator` instead of the former SCN client.
+- Exception: `getConfig()` and `setConfig()` removed; replaced by `getSourceLanguage()`, `getTargetLanguage()`, and `setLanguages()`.
+
+### Breaking Changes
+
+The `scn/deepl-api-connector` package has been replaced with the official `deeplcom/deepl-php` library. `Translator::getConnector()` now returns `\DeepL\Translator` — any code calling methods directly on the returned connector must be updated to use the new API. The `getConfig()` and `setConfig()` methods on `Translator_Exception_Request` have been removed; use `getSourceLanguage()`, `getTargetLanguage()`, and `setLanguages()` instead.
+
 ## v2.0.3 - Improved exception diagnostics
 - Exception: `getDetails()` now returns the full diagnostic analysis, visible in any standard exception display.
 - Exception: Fixed the no-Guzzle-exception branch to show a specific, actionable message instead of a generic one.

@@ -82,8 +82,7 @@ Unnecessary filesystem scans waste tokens and slow down every task. Apply this l
 | `setProxy()` called after `translate()` | This is valid — it resets the cached `DeeplClient`. Document the call order in any code you write. | MUST |
 | `setTimeOut()` called after first `translate()` or `getConnector()` | The timeout will NOT apply to the already-initialised client. Warn the caller. | MUST |
 | Simulation mode used | Verify `session_start()` has been called by the host application; simulation mode depends on `$_SESSION`. | MUST |
-| Adding a dependency | Check that it does not conflict with the VCS fork of `scn/deepl-api-connector` (`dev-master` constraint). | MUST |
-| Touching the DeepL connector fork | The fork lives at `github.com/Mistralys/deepl-api-connector.git` — upstream Packagist is NOT used. See `constraints.md`. | MUST |
+| Adding a dependency | Check that it does not conflict with `deeplcom/deepl-php` or `guzzlehttp/guzzle`. | MUST |
 | Test needs a live API key | Use `tests/apikey.dist.php` as a template; never commit `tests/apikey.php`. | MUST |
 | Running static analysis | Use `composer analyze`; code in `src/` must pass PHPStan level 6. | MUST |
 
@@ -95,7 +94,7 @@ Unnecessary filesystem scans waste tokens and slow down every task. Apply this l
 |---|---|
 | Language | PHP 8.4+ (`declare(strict_types=1)` everywhere) |
 | Package | `mistralys/deepl-xml-translator` |
-| Architecture | Single-namespace library (`DeeplXML`); facade over `scn/deepl-api-connector` |
+| Architecture | Single-namespace library (`DeeplXML`); facade over `deeplcom/deepl-php` |
 | Package manager | Composer (classmap autoloading from `src/`) |
 | Test framework | PHPUnit 12 — suite name `DeeplXML Translator Tests` |
 | Static analysis | PHPStan 2.1+, level 6, `src/` only |

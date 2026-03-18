@@ -11,12 +11,6 @@
 			"role" : "Lead"
 		}
 	],
-	"repositories": [
-		{
-			"type": "vcs",
-			"url": "https://github.com/Mistralys/deepl-api-connector.git"
-		}
-	],
 	"autoload" :
 	{
 		"classmap" :
@@ -30,7 +24,7 @@
 	{
 		"php": "^8.4",
 		"mistralys/application-utils" : "^3.2",
-		"scn/deepl-api-connector": "dev-master",
+		"deeplcom/deepl-php": "^1.10",
 		"guzzlehttp/guzzle": "^7.10",
       	"ext-dom": "*",
 		"ext-openssl": "*"

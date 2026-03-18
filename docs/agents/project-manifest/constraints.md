@@ -40,7 +40,7 @@
 
 ## DeepL Client Lifecycle
 
-- `DeeplClient` instances are cached statically in `Translator::$deepl` keyed by API key, so multiple `Translator` objects with the same API key share one client.
+- `DeepL\Translator` instances are cached statically in `Translator::$deepl` keyed by API key, so multiple `Translator` objects with the same API key share one client.
 - Calling `setProxy()` resets (nullifies) the cached client for that API key, forcing re-initialisation on the next request. This is intentional — proxy config must be set before the first `translate()` call, or `setProxy()` must be called again.
 - Changing `setTimeOut()` after the client has been initialised does **not** reset the client; set the timeout before the first call to `translate()` or `getConnector()`.
 
@@ -73,5 +73,5 @@
 
 ## Dependencies
 
-- The `scn/deepl-api-connector` dependency is sourced from a VCS fork (`github.com/Mistralys/deepl-api-connector.git`) rather than the upstream Packagist package. This is because the upstream package had a PHP error that required a temporary fork (see changelog v2.0.2). Changes to this dependency must account for the fork.
-- `minimum-stability` is `dev` with `prefer-stable: true` to accommodate the `dev-master` constraint on the forked connector.
+- The DeepL HTTP client is `deeplcom/deepl-php` (the official DeepL library), sourced from Packagist. It replaced the former `scn/deepl-api-connector` fork (removed in v2.1.0) because the upstream SCN package was unmaintained and its authentication layer had changed.
+- `minimum-stability` is `dev` with `prefer-stable: true` to accommodate the `dev-latest` constraint on `roave/security-advisories`.

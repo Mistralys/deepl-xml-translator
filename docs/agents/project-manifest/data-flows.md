@@ -21,7 +21,7 @@ Caller
   └─ $translator->translate()
         │
         ├─ Translator::initDeepL()
-        │     └─ DeeplClientFactory::create($apiKey, new GuzzleHttp\Client($options))
+        │     └─ new DeepL\Translator($apiKey, ['http_client' => new GuzzleHttp\Client($options)])
         │        result cached in static Translator::$deepl[$apiKey]
         │
         ├─ Translator::renderXML()
@@ -31,14 +31,13 @@ Caller
         │     ├─ builds <document><deeplstring id="...">...</deeplstring>...</document>
         │     └─ returns XML string
         │
-        ├─ new TranslationConfig($xml, $targetLang, $sourceLang)
-        │     tag_handling=xml, preserve_formatting=on, split_sentences=nonewlines
-        │     ignore_tags=[deeplignore]
+        ├─ $options = [tag_handling=xml, preserve_formatting=true,
+        │              split_sentences=nonewlines, ignore_tags=[deeplignore]]
         │
         ├─ (if simulation mode) check $_SESSION[md5($xml)] for cached result
         │
-        ├─ DeeplClient::getTranslation($config)   <── HTTP POST to DeepL API
-        │     returns Translation object
+        ├─ DeepL\Translator::translateText($xml, $sourceLang, $targetLang, $options)  <── HTTP POST to DeepL API
+        │     returns DeepL\TextResult; $result->text contains translated XML
         │
         ├─ (if simulation mode) store result in $_SESSION[md5($xml)]
         │
@@ -85,18 +84,19 @@ $string->getTranslatedText()
 
 ## 3. Error Flow — Failed HTTP Request
 
-When `DeeplClient::getTranslation()` throws any `Exception`:
+When `DeepL\Translator::translateText()` throws any `Exception`:
 
 ```
-DeeplClient::getTranslation()
-  └─ throws Exception (e.g. Scn\DeeplApiConnector\Exception\RequestException
-                        wrapping GuzzleHttp\Exception\ClientException)
+DeepL\Translator::translateText()
+  └─ throws Exception (e.g. DeepL\DeepLException or a subclass such as
+                        DeepL\AuthorizationException, DeepL\ConnectionException,
+                        the latter optionally wrapping GuzzleHttp\Exception\ClientException)
        │
        └─ caught in Translator::translate()
             └─ new Translator_Exception_Request(...)
                  ├─ setTranslator($this)
                  ├─ setXML($sourceXml)
-                 ├─ setConfig($config)
+                 ├─ setLanguages($sourceLang, $targetLang)
                  └─ thrown to caller
 
 Caller catches Translator_Exception_Request:
@@ -131,9 +131,9 @@ $translator->translate()
 
 ## 5. Advanced: Direct Connector Access
 
-For operations not supported by this library (e.g., file translation):
+For operations not supported by this library (e.g., glossary management, usage queries):
 
 ```
-$api = $translator->getConnector()   // returns Scn\DeeplApiConnector\DeeplClient
-// caller uses $api directly per the deepl-api-connector documentation
+$api = $translator->getConnector()   // returns DeepL\Translator
+// caller uses $api directly per the deeplcom/deepl-php documentation
 ```

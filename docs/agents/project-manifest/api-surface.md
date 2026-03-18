@@ -62,7 +62,7 @@ public function isTranslated() : bool
 
 // Diagnostics / advanced
 public function getXML() : string             // returns the XML that would be / was sent to DeepL
-public function getConnector() : \Scn\DeeplApiConnector\DeeplClient
+public function getConnector() : \DeepL\Translator
 ```
 
 ---
@@ -114,17 +114,18 @@ No additional public members beyond those inherited from `\AppUtils\BaseExceptio
 ## `Translator_Exception_Request`
 
 **File:** `src/Translator/Exception/Request.php`
-**Description:** Specialised exception thrown when the HTTP request to DeepL fails or returns an unexpected result. Extends `Translator_Exception`. Carries diagnostic context: the `Translator` instance, the `TranslationConfig`, and the submitted XML.
+**Description:** Specialised exception thrown when the HTTP request to DeepL fails or returns an unexpected result. Extends `Translator_Exception`. Carries diagnostic context: the `Translator` instance, the request languages, and the submitted XML.
 
 ### Public Methods
 
 ```php
 public function setTranslator(Translator $translator) : void
-public function setConfig(\Scn\DeeplApiConnector\Model\TranslationConfig $config) : void
+public function setLanguages(string $sourceLang, string $targetLang) : void
 public function setXML(string $xml) : void
 
 public function getTranslator() : Translator
-public function getConfig() : \Scn\DeeplApiConnector\Model\TranslationConfig
+public function getSourceLanguage() : string
+public function getTargetLanguage() : string
 public function getXML() : string
 
 // Overrides BaseException::getDetails() to return full renderAnalysis() output when context is available

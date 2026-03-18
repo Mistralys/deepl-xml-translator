@@ -15,9 +15,9 @@
 
 | Package | Version constraint | Purpose |
 |---|---|---|
-| `mistralys/application-utils` | `>=1.3.0` | Utilities: `ConvertHelper`, `Highlighter`, `XMLHelper`, `BaseException`, `parseVariable()`, `parseThrowable()`. |
-| `scn/deepl-api-connector` | `dev-master` (via VCS fork at `github.com/Mistralys/deepl-api-connector.git`) | Low-level DeepL HTTP client (`DeeplClient`, `DeeplClientFactory`, `TranslationConfig`, `Translation`, enums). |
-| `guzzlehttp/guzzle` | `^7.4.2` | HTTP client used internally by `scn/deepl-api-connector`; also configured directly for timeout, proxy, and debug options. |
+| `mistralys/application-utils` | `>=1.3.0` | Utilities: `ConvertHelper`, `Highlighter`, `XMLHelper`, `BaseException`, `parseThrowable()`. |
+| `deeplcom/deepl-php` | `^1.10` | Official DeepL PHP client (`DeepL\Translator`, `DeepL\TranslateTextOptions`). Replaces the former `scn/deepl-api-connector` fork. |
+| `guzzlehttp/guzzle` | `^7.10` | HTTP client passed to `DeepL\Translator` via `http_client` option; configured directly for timeout, proxy, and debug options. |
 | `ext-dom` | `*` | DOM extension used to parse DeepL's XML response. |
 | `ext-openssl` | `*` | TLS support for HTTPS calls to the DeepL API. |
 
@@ -33,10 +33,10 @@
 ## Architectural Patterns
 
 - **Single-namespace library:** All classes live in the `DeeplXML` namespace.
-- **Facade over third-party client:** `Translator` acts as a high-level facade over `scn/deepl-api-connector`, hiding its configuration complexity.
+- **Facade over third-party client:** `Translator` acts as a high-level facade over `deeplcom/deepl-php` (`DeepL\Translator`), hiding its configuration complexity.
 - **XML envelope pattern:** Multiple strings are batched into a single XML document (`<document>` root, `<deeplstring id="...">` children) and sent as one request to DeepL's XML translation mode, preserving HTML markup within each string.
 - **Ignore-tag injection:** Sub-strings that must not be translated are wrapped in `<deeplignore>` tags before the request and stripped back out after.
-- **Shared static connector pool:** `DeeplClient` instances are cached in a `static` array keyed by API key (`Translator::$deepl`), so multiple `Translator` instances sharing the same key reuse one HTTP client.
+- **Shared static connector pool:** `DeepL\Translator` instances are cached in a `static` array keyed by API key (`Translator::$deepl`), so multiple `Translator` instances sharing the same key reuse one HTTP client.
 - **Simulation / session cache:** An optional simulation mode caches translated results in `$_SESSION` keyed by `md5` of the source XML, to avoid redundant API calls during development.
 
 ## Build & Analysis Scripts (Composer)
