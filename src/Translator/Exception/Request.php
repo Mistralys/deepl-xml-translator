@@ -30,6 +30,15 @@ class Translator_Exception_Request extends Translator_Exception
      */
     private $xml;
 
+    /**
+     * Guard flag to prevent infinite recursion when getDetails()
+     * calls renderAnalysis(), which internally calls getDetails()
+     * via parseThrowable().
+     *
+     * @var bool
+     */
+    private bool $computingDetails = false;
+
     public function setTranslator(Translator $translator): void
     {
         $this->translator = $translator;
@@ -43,6 +52,30 @@ class Translator_Exception_Request extends Translator_Exception
     public function setXML(string $xml): void
     {
         $this->xml = $xml;
+    }
+
+    /**
+     * Overrides the default details getter to return the full
+     * diagnostic analysis when config and XML are available.
+     * Falls back to the constructor-provided details string
+     * while the exception is still being constructed (i.e. before
+     * setConfig() / setXML() have been called) or during the
+     * internal renderAnalysis() call to avoid recursion.
+     *
+     * @return string
+     */
+    public function getDetails() : string
+    {
+        if($this->computingDetails || $this->config === null || $this->xml === null)
+        {
+            return parent::getDetails();
+        }
+
+        $this->computingDetails = true;
+        $result = $this->renderAnalysis();
+        $this->computingDetails = false;
+
+        return $result;
     }
 
     public function getTranslator(): Translator
@@ -149,14 +182,18 @@ class Translator_Exception_Request extends Translator_Exception
 
         if(!$ex)
         {
+            $previousInfo = $previous !== null
+                ? sprintf('An exception of type [%s] occurred.', parseVariable($previous)->enableType()->toString())
+                : 'No HTTP request exception was captured. The API may have returned an empty or malformed response (e.g. 403 Forbidden due to an invalid API key).';
+
             return $this->renderText(sprintf(
-                'An exception of type [%1$s] occurred.<br>'.
+                '%1$s<br>'.
                 'Exception info:<br>'.
                 '%5$s<br>'.
                 'Source language: %2$s<br>'.
                 'Target language: %3$s<br>'.
                 'Submitted XML:<pre>%4$s</pre>',
-                parseVariable($previous)->enableType()->toString(),
+                $previousInfo,
                 $this->config->getSourceLang(),
                 $this->config->getTargetLang(),
                 $this->filterHTML($this->getXML(), $html),
