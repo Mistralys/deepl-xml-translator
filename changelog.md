@@ -1,6 +1,6 @@
 # DeepL XML Translator Changelog
 
-## v3.1.0 - Deprecated Target Language (Breaking-M)
+## v3.0.1 - Deprecated Target Language (Breaking-M)
 - Translator: An exception now guards against using `EN` or `PT` as target language.
 
 ### Breaking Change
