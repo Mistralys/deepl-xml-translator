@@ -100,3 +100,36 @@ $api = $translator->getConnector();
 ## Running the tests
 
 By default, the unit tests will only test the offline API of the Translator itself. To enable live testing with the DeepL API, rename the file `tests/apikey.dist.php` to `tests/apikey.php` and edit it to insert your API key. The additional tests will be enabled automatically.
+
+## Manual API checks
+
+**For free API keys** (ending in :fx)     
+
+```bash
+curl -s "https://api-free.deepl.com/v2/usage" \
+    -H "Authorization: DeepL-Auth-Key YOUR_API_KEY_HERE"
+```
+
+**For paid API keys**
+
+```bash
+curl -s "https://api.deepl.com/v2/usage" \
+    -H "Authorization: DeepL-Auth-Key YOUR_API_KEY"
+```
+
+**With a proxy**
+
+```bash
+curl -x "http://user:pass@proxy:3128" \
+    -H "Authorization: DeepL-Auth-Key YOUR_API_KEY" \
+    "https://api.deepl.com/v2/usage"
+```
+
+A successful response looks like:
+
+```json
+{
+    "character_count":1234,
+    "character_limit":500000
+}  
+```
