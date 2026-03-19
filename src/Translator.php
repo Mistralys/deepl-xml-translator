@@ -42,6 +42,18 @@ class Translator
     public const ERROR_UNSUPPORTED_TRANSLATION_RESULT = 37509;
     public const ERROR_EMPTY_XML_DOCUMENT = 37510;
     public const ERROR_TRANSLATION_RESULT_EMPTY = 37511;
+    public const ERROR_DEPRECATED_TARGET_LANGUAGE = 37512;
+
+    /**
+     * Target language codes that DeepL has deprecated and will reject.
+     * These must be replaced with their regional variants.
+     *
+     * @var array<string,string[]>
+     */
+    public const DEPRECATED_TARGET_LANGUAGES = array(
+        'EN' => array('EN-GB', 'EN-US'),
+        'PT' => array('PT-BR', 'PT-PT'),
+    );
 
    /**
     * The name of the XML tag to use to store individual texts in
@@ -83,10 +95,25 @@ class Translator
     * @param string $targetLang The language to translate strings to, e.g. "EN", "DE"
     */
     public function __construct(string $apiKey, string $sourceLang, string $targetLang)
-    { 
+    {
         $this->apiKey = $apiKey;
         $this->sourceLang = strtoupper($sourceLang);
         $this->targetLang = strtoupper($targetLang);
+
+        if(isset(self::DEPRECATED_TARGET_LANGUAGES[$this->targetLang]))
+        {
+            throw new Translator_Exception(
+                sprintf(
+                    'Target language "%s" is deprecated by DeepL.',
+                    $this->targetLang
+                ),
+                sprintf(
+                    'Use one of the regional variants instead: %s.',
+                    implode(', ', self::DEPRECATED_TARGET_LANGUAGES[$this->targetLang])
+                ),
+                self::ERROR_DEPRECATED_TARGET_LANGUAGE
+            );
+        }
     }
 
     public function setTimeOut(float $timeOut) : self

@@ -1,5 +1,19 @@
 # DeepL XML Translator Changelog
 
+## v3.1.0 - Deprecated Target Language (Breaking-M)
+- Translator: An exception now guards against using `EN` or `PT` as target language.
+
+### Breaking Change
+
+Passing `'EN'` or `'PT'` as `$targetLang` now throws an exception immediately at construction time. Replace them with the appropriate regional variant:
+
+| Was | Use instead |
+|---|---|
+| `EN` | `en-GB` or `en-US` |
+| `PT` | `pt-BR` or `pt-PT` |
+
+Both codes remain valid as source language.
+
 ## v3.0.0 - Switched to Official DeepL Library (Breaking-M)
 - Composer: Replaced unmaintained `scn/deepl-api-connector` with the official `deeplcom/deepl-php` library.
 - Translator: `getConnector()` now returns `\DeepL\Translator` instead of the former SCN client.

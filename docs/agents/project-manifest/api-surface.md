@@ -12,20 +12,28 @@ All classes are in the `DeeplXML` namespace.
 ### Constants
 
 ```php
-public const ERROR_STRING_ID_ALREADY_EXISTS       = 37601;
-public const ERROR_NO_STRINGS_TO_TRANSLATE        = 37602;
-public const ERROR_FAILED_CONVERTING_TEXT         = 37603;
+public const ERROR_STRING_ID_ALREADY_EXISTS         = 37601;
+public const ERROR_NO_STRINGS_TO_TRANSLATE          = 37602;
+public const ERROR_FAILED_CONVERTING_TEXT           = 37603;
 public const ERROR_MISSING_ID_ATTRIBUTE_IN_RESPONSE = 37604;
-public const ERROR_RESPONSE_STRING_DOES_NOT_EXIST = 37605;
-public const ERROR_STRING_NOT_FOUND_IN_RESULT     = 37506;
-public const ERROR_CANNOT_GET_UNKNOWN_STRING      = 37507;
-public const ERROR_TRANSLATION_REQUEST_FAILED     = 37508;
-public const ERROR_UNSUPPORTED_TRANSLATION_RESULT = 37509;
-public const ERROR_EMPTY_XML_DOCUMENT             = 37510;
-public const ERROR_TRANSLATION_RESULT_EMPTY       = 37511;
+public const ERROR_RESPONSE_STRING_DOES_NOT_EXIST   = 37605;
+public const ERROR_STRING_NOT_FOUND_IN_RESULT       = 37506;
+public const ERROR_CANNOT_GET_UNKNOWN_STRING        = 37507;
+public const ERROR_TRANSLATION_REQUEST_FAILED       = 37508;
+public const ERROR_UNSUPPORTED_TRANSLATION_RESULT   = 37509;
+public const ERROR_EMPTY_XML_DOCUMENT               = 37510;
+public const ERROR_TRANSLATION_RESULT_EMPTY         = 37511;
+public const ERROR_DEPRECATED_TARGET_LANGUAGE       = 37512;  // thrown when $targetLang is EN or PT
 
 public const SPLITTING_TAG = 'deeplstring';  // XML tag wrapping each string sent to DeepL
 public const IGNORE_TAG    = 'deeplignore';  // XML tag instructing DeepL to skip contents
+
+// Maps deprecated target language codes to their accepted regional replacements.
+// @see Translator::ERROR_DEPRECATED_TARGET_LANGUAGE
+public const DEPRECATED_TARGET_LANGUAGES = [
+    'EN' => ['EN-GB', 'EN-US'],
+    'PT' => ['PT-BR', 'PT-PT'],
+];
 ```
 
 ### Constructor
@@ -35,6 +43,13 @@ public function __construct(string $apiKey, string $sourceLang, string $targetLa
 ```
 
 `$sourceLang` and `$targetLang` are normalised to uppercase (e.g. `'en'` becomes `'EN'`).
+
+**Throws `Translator_Exception` (`ERROR_DEPRECATED_TARGET_LANGUAGE`)** if `$targetLang` is a deprecated
+code. DeepL rejects `EN` and `PT` as target languages; use a regional variant instead:
+- `EN` → `EN-GB` or `EN-US`
+- `PT` → `PT-BR` or `PT-PT`
+
+Both codes are valid as *source* languages.
 
 ### Public Methods
 

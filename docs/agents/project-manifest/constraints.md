@@ -18,6 +18,22 @@
 
 ---
 
+## Deprecated DeepL Target Languages
+
+DeepL rejects `EN` and `PT` as target language codes; regional variants are required:
+
+| Deprecated | Use instead |
+|---|---|
+| `EN` | `EN-GB` or `EN-US` |
+| `PT` | `PT-BR` or `PT-PT` |
+
+Both codes remain valid as *source* languages. The `Translator` constructor enforces this at construction
+time and throws `Translator_Exception` with code `ERROR_DEPRECATED_TARGET_LANGUAGE` (37512) if a
+deprecated code is passed as `$targetLang`. The full list of deprecated codes is declared in
+`Translator::DEPRECATED_TARGET_LANGUAGES`.
+
+---
+
 ## Error Handling
 
 - All exceptions thrown by the library extend `Translator_Exception`, which itself extends `\AppUtils\BaseException`.

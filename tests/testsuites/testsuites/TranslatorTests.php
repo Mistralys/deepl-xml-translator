@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace testsuites;
 
+use DeeplXML\Translator_Exception;
 use DeeplXML\Translator_Exception_Request;
 use PHPUnit\Framework\TestCase;
 use DeeplXML\Translator;
@@ -44,6 +45,22 @@ final class TranslatorTests extends TestCase
         $translator->addString('id1', 'Translate me');
 
         $this->assertEquals('id1', $translator->getStringByID('id1')->getID());
+    }
+
+    public function test_deprecatedTargetLanguage() : void
+    {
+        $this->expectException(Translator_Exception::class);
+        $this->expectExceptionCode(Translator::ERROR_DEPRECATED_TARGET_LANGUAGE);
+
+        new Translator('dummy', 'DE', 'EN');
+    }
+
+    public function test_deprecatedTargetLanguage_pt() : void
+    {
+        $this->expectException(Translator_Exception::class);
+        $this->expectExceptionCode(Translator::ERROR_DEPRECATED_TARGET_LANGUAGE);
+
+        new Translator('dummy', 'DE', 'PT');
     }
 
     public function test_getLocales() : void
